@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.image.*?>
 <?import javafx.scene.*?>
 <?import javafx.scene.canvas.*?>
 <?import java.lang.*?>
@@ -18,11 +19,15 @@
                      <children>
                         <Label layoutX="27.0" layoutY="92.0" text="CA size" AnchorPane.leftAnchor="27.0" AnchorPane.topAnchor="92.0" />
                         <TextField fx:id="calenTextField" editable="false" layoutX="103.0" layoutY="88.0" prefHeight="25.0" prefWidth="75.0" text="21" AnchorPane.leftAnchor="103.0" AnchorPane.topAnchor="88.0" />
-                        <Button fx:id="CreateButton" layoutX="13.0" layoutY="225.0" mnemonicParsing="false" prefHeight="28.0" prefWidth="106.0" text="Create" AnchorPane.leftAnchor="13.0" AnchorPane.topAnchor="225.0" />
-                        <Button fx:id="StepButton" disable="true" layoutX="129.0" layoutY="225.0" mnemonicParsing="false" prefHeight="27.0" prefWidth="132.0" text="Step" />
+                        <Button fx:id="CreateButton" layoutX="13.0" layoutY="225.0" mnemonicParsing="false" prefHeight="28.0" prefWidth="134.0" text="Create" AnchorPane.leftAnchor="13.0" AnchorPane.topAnchor="225.0" />
+                        <Button fx:id="StepButton" disable="true" layoutX="155.0" layoutY="225.0" mnemonicParsing="false" prefHeight="27.0" prefWidth="106.0" text="Step" />
                         <Slider fx:id="calenSlider" layoutX="24.0" layoutY="127.0" prefHeight="14.0" prefWidth="207.0" />
                         <Slider fx:id="zoomSlider" layoutX="25.0" layoutY="184.0" prefHeight="14.0" prefWidth="207.0" />
-                        <Label layoutX="32.0" layoutY="156.0" text="Zoom:" />
+                        <Label layoutX="25.0" layoutY="155.0" text="Zoom:" />
+                        <ToggleButton layoutX="14.0" layoutY="263.0" mnemonicParsing="false" prefHeight="31.0" prefWidth="247.0" text="Run" />
+                        <ListView fx:id="FirebedListView" layoutX="56.0" layoutY="365.0" prefHeight="220.0" prefWidth="143.0" AnchorPane.leftAnchor="56.0" AnchorPane.topAnchor="365.0" />
+                        <Label layoutX="24.0" layoutY="314.0" text="Firebed Types:" AnchorPane.leftAnchor="24.0" AnchorPane.topAnchor="314.0" />
+                        <Label layoutX="25.0" layoutY="332.0" text="(Choose from list and hold Ctrl to apply)" />
                      </children>
                   </AnchorPane>
                </content>
