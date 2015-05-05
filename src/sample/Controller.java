@@ -1,6 +1,7 @@
 package sample;
 
 import javafx.animation.Animation;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
@@ -42,10 +43,13 @@ public class Controller implements Initializable {
     Canvas canvas;
     @FXML
     ListView<Cell.BedType> FirebedListView;
+    @FXML
+    Button RunToggleButton;
 
     IntegerProperty calen = new SimpleIntegerProperty();
     Cell[][] cells;
     BooleanProperty runningProperty = new SimpleBooleanProperty(true);
+    BooleanProperty runToggledProperty = new SimpleBooleanProperty(false);
 
 
     @Override
@@ -120,43 +124,11 @@ public class Controller implements Initializable {
         Task<Cell[][]> task = new Task<Cell[][]>() {
             @Override
             protected Cell[][] call() throws Exception {
-                try {
-                    for (int i = 0; i < n; i++) {
-                        for (int j = 0; j < n; j++) {
-                            float sum = 0, port, sqrtf = (float) Math.sqrt(2);
-                            for (int ii = i - 1; ii <= i + 1; ii++)
-                                for (int jj = j - 1; jj <= j + 1; jj++) {
-                                    if (ii > 0 && jj > 0 && ii < n && jj < n) {
-                                        port = cells[ii][jj].burned * 1f / 9f;
-                                        if (ii != i && jj != j) port /= sqrtf;
-                                        sum += port;
-                                    }
-                                }
-                            //firebed adjustment
-                            float flam=cells[i][j].getFlammablePercentage();
-                            float burned = 0.24f * cells[i][j].getBurned() + sum + flam*sum;
-                            burned = burned > 1f ? 1f : burned;
-                            //float burned = (1f-flam)*0.24f * cells[i][j].getBurned() + flam*sum;
-                            cells[i][j].setNewBurned(burned);
-                        }
-                    }
-                    return cells;
-                }catch (Exception ex) {
-                    ex.printStackTrace();
-                    int x=5;
-                }
-                return null;
+                return UpdateCells();
             }
         };
         task.setOnSucceeded(event -> {
-            for (int i = 0; i < n; i++) {
-                for (int j = 0; j < n; j++) {
-                    cells[i][j].commit();
-                    gc.setFill(cells[i][j].getComputedFill());
-                    //gc.setFill(Color.BLACK);
-                    gc.fillRect(16 * j, 16 * i, 16, 16);
-                }
-            }
+            UpdateUI(n, gc);
             runningProperty.set(false);
         });
         Thread t = new Thread(task);
@@ -164,11 +136,47 @@ public class Controller implements Initializable {
 
     }
 
+    private Cell[][] UpdateCells() {
+        int n = cells.length;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                float sum = 0, port, sqrtf = (float) Math.sqrt(2);
+                for (int ii = i - 1; ii <= i + 1; ii++)
+                    for (int jj = j - 1; jj <= j + 1; jj++) {
+                        if (ii > 0 && jj > 0 && ii < n && jj < n) {
+                            port = cells[ii][jj].burned * 1f / 9f;
+                            if (ii != i && jj != j) port /= sqrtf;
+                            sum += port;
+                        }
+                    }
+                //firebed adjustment
+                float flam=cells[i][j].getFlammablePercentage();
+                float burned = 0.24f * cells[i][j].getBurned() + sum + flam*sum;
+                burned = burned > 1f ? 1f : burned;
+                //float burned = (1f-flam)*0.24f * cells[i][j].getBurned() + flam*sum;
+                cells[i][j].setNewBurned(burned);
+            }
+        }
+        return cells;
+    }
+
+    private void UpdateUI(int n, GraphicsContext gc) {
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                cells[i][j].commit();
+                gc.setFill(cells[i][j].getComputedFill());
+                //gc.setFill(Color.BLACK);
+                gc.fillRect(16 * j, 16 * i, 16, 16);
+            }
+        }
+
+    }
+
     private void MakeBindings() {
 
         calenTextField.textProperty().bind(Bindings.createStringBinding(
-                () -> Integer.toString((int) calenSlider.getValue()),
-                calenSlider.valueProperty())
+                        () -> Integer.toString((int) calenSlider.getValue()),
+                        calenSlider.valueProperty())
         );
         calen.bind(Bindings.createObjectBinding(() -> (int) calenSlider.getValue(), calenSlider.valueProperty()));
         Scale scale=new Scale(1,1);
@@ -196,9 +204,53 @@ public class Controller implements Initializable {
                         setGraphic(hbox);
                     }
                 };
-
             }
         });
         FirebedListView.setItems(FXCollections.observableArrayList(Cell.BedType.values()));
+        RunToggleButton.setOnAction(event -> {
+            Boolean value = runToggledProperty.getValue();
+            if (value) ((Button) event.getSource()).setText("Run");
+            else ((Button) event.getSource()).setText("Stop");
+            runToggledProperty.setValue(!value);
+            int n = cells.length;
+            GraphicsContext gc = canvas.getGraphicsContext2D();
+            Platform.runLater(() -> {
+
+
+                if (canvas.getWidth() == 0) { //Make Canvas of same size
+                    TimeVBox.setVisible(false);
+                    canvas.setVisible(true);
+                    canvas.setWidth(16 * n + 16);
+                    canvas.setHeight(16 * n + 16);
+
+                }
+                canvas.setHeight(canvas.getHeight() + 16);
+                runningProperty.set(true);
+            });
+            Task<Boolean> task = new Task<Boolean>() {
+                @Override
+                protected Boolean call() throws Exception {
+                    while (runToggledProperty.get()) {
+                        int steps=0;
+                        UpdateCells();
+                        if (steps++%5==0)
+                            Platform.runLater(()->UpdateUI(n,gc));
+                        try {
+                            Thread.sleep(200);
+                        } catch(InterruptedException ex) {
+                            Thread.currentThread().interrupt();
+                        }
+                    }
+                    return true;
+                }
+            };
+            task.setOnSucceeded(event1 -> {
+                UpdateUI(n, gc);
+                runningProperty.set(false);
+            });
+            Thread t = new Thread(task);
+            t.start();
+        });
     }
+
 }

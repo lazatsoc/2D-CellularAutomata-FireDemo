@@ -61,7 +61,7 @@ public class Cell extends Rectangle {
     public enum BedType {
         Water, Grass, DryGrass, Forest, Fire
     }
-    private static float[] flammablePercentages = new float[] {-1f, -.2f, .3f, 0, 1f};
+    private static float[] flammablePercentages = new float[] {-1f, -.05f, .3f, 0, 1f};
     public static Color[] BedPaints = new Color[] {Color.CORNFLOWERBLUE, Color.GREENYELLOW, Color.YELLOW, Color.DARKGREEN, Color.DARKRED.darker()};
     private static Color fullyBurned = Color.DARKRED.darker();
 }
