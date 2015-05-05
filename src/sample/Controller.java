@@ -50,7 +50,7 @@ public class Controller implements Initializable {
     Cell[][] cells;
     BooleanProperty runningProperty = new SimpleBooleanProperty(true);
     BooleanProperty runToggledProperty = new SimpleBooleanProperty(false);
-
+    Thread togglethread;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -227,17 +227,17 @@ public class Controller implements Initializable {
                 canvas.setHeight(canvas.getHeight() + 16);
                 runningProperty.set(true);
             });
-            Task<Boolean> task = new Task<Boolean>() {
+            Task task = new Task<Boolean>() {
                 @Override
                 protected Boolean call() throws Exception {
                     while (runToggledProperty.get()) {
-                        int steps=0;
+                        int steps = 0;
                         UpdateCells();
-                        if (steps++%5==0)
-                            Platform.runLater(()->UpdateUI(n,gc));
+                        if (steps++ % 5 == 0)
+                            Platform.runLater(() -> UpdateUI(n, gc));
                         try {
                             Thread.sleep(200);
-                        } catch(InterruptedException ex) {
+                        } catch (InterruptedException ex) {
                             Thread.currentThread().interrupt();
                         }
                     }
@@ -248,9 +248,19 @@ public class Controller implements Initializable {
                 UpdateUI(n, gc);
                 runningProperty.set(false);
             });
-            Thread t = new Thread(task);
-            t.start();
+            togglethread = new Thread(task);
+            togglethread.start();
         });
+    }
+
+    public void terminate() {
+        if (togglethread.isAlive()) {
+            try {
+                runToggledProperty.set(false);
+                togglethread.join();
+            } catch (Exception ex) {
+            }
+        }
     }
 
 }
